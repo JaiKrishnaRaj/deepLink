@@ -244,6 +244,7 @@ class FileUpload extends HTMLElement {
     this.crossPlatformFiles = [];
     this.isProcessed = [];
     this.fileNames = [];
+    this.fileSizes = [];
     this.fileCount = 0;
     this.value = "";
     this.passwords = [];
@@ -596,20 +597,17 @@ class FileUpload extends HTMLElement {
       }
       if (!this.fileTypes.split(",").includes(file.type)) {
         const fileTypeMap = {
-          "application/pdf": "PDF",
-          "image/png": "PNG",
-          "image/jpeg": "JPEG",
-        };
-        let fileTypes = this.fileTypes.split(",");
-        let msg =
-          fileTypes.length == 1
-            ? "The file is not of type "
-            : "The file's type is not one of ";
-        for (let j = 0; j < fileTypes.length; j++) {
-          msg += fileTypeMap[fileTypes[j]];
-          if (j != fileTypes.length - 1) msg += ", ";
+          "application/pdf" : "PDF",
+          "image/png" : "PNG",
+          "image/jpeg": "JPEG"
         }
-        msg += ". Please use a file of valid type.";
+        let fileTypes = this.fileTypes.split(',')
+        let msg = (fileTypes.length==1) ? "The file is not of type " : "The file's type is not one of ";
+        for (let j = 0; j < fileTypes.length; j++) {
+          msg += fileTypeMap[fileTypes[j]] 
+          if(j!=fileTypes.length-1) msg += ", "
+        }
+        msg += ". Please use a file of valid type."
         this.warningMessage.textContent = msg;
         this.clearFileInput();
         return;
@@ -645,10 +643,10 @@ class FileUpload extends HTMLElement {
 
       if (file.type.startsWith("image/")) {
         this.processImage(file, (resizedFile) => {
-          this.finalizeFileProcessing(resizedFile);
+            this.finalizeFileProcessing(resizedFile);
         });
       } else {
-        this.finalizeFileProcessing(file);
+          this.finalizeFileProcessing(file);
       }
     }
 
@@ -662,75 +660,68 @@ class FileUpload extends HTMLElement {
   }
 
   processImage(file, callback) {
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const MAX_WIDTH = 1024; // Adjust as needed
-        const MAX_HEIGHT = 1024; // Adjust as needed
-        let width = img.width;
-        let height = img.height;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+              const canvas = document.createElement("canvas");
+              const MAX_WIDTH = 1024; // Adjust as needed
+              const MAX_HEIGHT = 1024; // Adjust as needed
+              let width = img.width;
+              let height = img.height;
 
-        if (width > height) {
-          if (width > MAX_WIDTH) {
-            height *= MAX_WIDTH / width;
-            width = MAX_WIDTH;
-          }
-        } else {
-          if (height > MAX_HEIGHT) {
-            width *= MAX_HEIGHT / height;
-            height = MAX_HEIGHT;
-          }
-        }
+              if (width > height) {
+                  if (width > MAX_WIDTH) {
+                      height *= MAX_WIDTH / width;
+                      width = MAX_WIDTH;
+                  }
+              } else {
+                  if (height > MAX_HEIGHT) {
+                      width *= MAX_HEIGHT / height;
+                      height = MAX_HEIGHT;
+                  }
+              }
 
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, width, height);
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext("2d");
+              ctx.drawImage(img, 0, 0, width, height);
 
-        canvas.toBlob(
-          (blob) => {
-            const resizedFile = new File([blob], file.name, {
-              type: file.type,
-              lastModified: Date.now(),
-            });
-            callback(resizedFile);
-          },
-          file.type,
-          0.8
-        ); // Adjust quality as needed
+              canvas.toBlob((blob) => {
+                  const resizedFile = new File([blob], file.name, {
+                      type: file.type,
+                      lastModified: Date.now(),
+                  });
+                  callback(resizedFile);
+              }, file.type, 0.8); // Adjust quality as needed
+          };
+          img.src = event.target.result;
       };
-      img.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
+      reader.readAsDataURL(file);
   }
 
   finalizeFileProcessing(file) {
-    this.checkEncryptionAndReadBase64(file, (isEncrypted, base64) => {
-      file.isEncrypted = isEncrypted;
-      file.base64 = base64;
+      this.checkEncryptionAndReadBase64(file, (isEncrypted, base64) => {
+          file.isEncrypted = isEncrypted;
+          file.base64 = base64;
 
-      file.password = "";
-      this.passwords.push(file.password);
+          file.password = "";
+          this.passwords.push(file.password);
 
-      this.files.push(file);
-      this.isProcessed.push("false");
-      // Added fileSizes property with name and size.
-      this.files.forEach((file, index) => {
-        this[`file${index + 1}Size`] = file.size;
+          this.files.push(file);
+          this.isProcessed.push("false");
+          this.updateFileList();
+          this.fileNames = this.files.map((f) => f.name);
+          this.fileSizes = this.files.map((f) => f.size);
+          this.crossPlatformFiles = this.files.map(
+              (f) => `data:${f.type};base64,${f.base64}`
+          );
+          this.dispatchEvent(
+              new CustomEvent("change", {
+                  detail: { files: this.files, fileNames: this.fileNames, fileSizes: this.fileSizes },
+              })
+          );
       });
-      this.updateFileList();
-      this.fileNames = this.files.map((f) => f.name);
-      this.crossPlatformFiles = this.files.map(
-        (f) => `data:${f.type};base64,${f.base64}`
-      );
-      this.dispatchEvent(
-        new CustomEvent("change", {
-          detail: { files: this.files, fileNames: this.fileNames },
-        })
-      );
-    });
   }
 
   removeStringAtIndex(arr, index) {
@@ -920,19 +911,6 @@ class FileUpload extends HTMLElement {
     }
     this.files = tempFile;
     this.isProcessed = tempIsProcessed;
-
-    // Clear all old dynamic size properties
-    Object.keys(this).forEach((key) => {
-      if (key.startsWith("file") && key.endsWith("Size")) {
-        delete this[key];
-      }
-    });
-
-    // Rebuild updated size properties
-    this.files.forEach((file, index) => {
-      this[`file${index + 1}Size`] = file.size;
-    });
-
     //this.files = this.files.filter((file) => file.name !== fileName);
     this.updateFileList();
     this.fileNames = this.files.map((f) => f.name);
@@ -1387,10 +1365,7 @@ class CustomDropdown extends HTMLElement {
       const key = keyValuePairs[i].trim();
       const value = keyValuePairs[i + 1].trim();
       const limit = keyValuePairs[i + 2].trim();
-      if (
-        key == this.getAttribute("blacklist1") ||
-        key == this.getAttribute("blacklist2")
-      )
+      if(key == this.getAttribute("blacklist1") || key == this.getAttribute("blacklist2"))
         continue;
       result[key] = {
         value: value,
@@ -1437,9 +1412,9 @@ class CustomDropdown extends HTMLElement {
 
     this.selectElement.innerHTML = ``;
 
-    if (!selected || selected == "null") {
+    if (!selected || selected=='null') {
       const firstKey = Object.keys(options)[0];
-      if (firstKey) {
+      if(firstKey) {
         this.setAttribute("selected", firstKey);
         this.value = firstKey;
         this.text = options[firstKey].value;
@@ -2036,6 +2011,7 @@ class UnoForm2 extends HTMLElement {
     this.value = "";
     this.files = [];
     this.filenames = "";
+    this.filensizes = "";
     this.fileCount = 0;
     this.enabled = ""; // Dropdown select value
     this.visible = "";
@@ -2087,9 +2063,7 @@ class UnoForm2 extends HTMLElement {
       this.areFilesValid() ? "no" : "yes"
     );
 
-    setTimeout(() => {
-      this.updateChildComponents();
-    }, 10);
+    setTimeout(()=>{this.updateChildComponents()},10)
   }
 
   get code_1() {
@@ -2378,11 +2352,13 @@ class UnoForm2 extends HTMLElement {
 
     const files = fileElement.crossPlatformFiles;
     const fileNames = fileElement.fileNames;
+    const fileSizes = fileElement.fileSizes;
     this.fileCount = fileElement.fileCount;
     this.crossPlatformFiles = [];
-    this.value = "";
-    this.filenames = "";
-    this.files = [];
+    this.value = ""
+    this.filenames = ""
+    this.filesizes = ""
+    this.files = []
 
     for (let i = 0; i < this.fileCount; i++) {
       let name = fileNames[i].replaceAll(",", "");
@@ -2396,11 +2372,13 @@ class UnoForm2 extends HTMLElement {
         type: type,
       });
 
-      this.value += this.value ? "," : "";
-      this.filenames += this.filenames ? "," : "";
+      this.value += (this.value)? "," : "";
+      this.filenames += (this.filenames)? "," : "";
+      this.filesizes += (this.filesizes)? "," : "";
       this.value += fileBase64;
       this.files.push(fileBase64);
       this.filenames += name;
+      this.filesizes += fileSizes[i];
     }
     this.isProcessed = fileElement.isProcessed;
 
@@ -2722,6 +2700,7 @@ class UnoForm3 extends HTMLElement {
     this.isValid = "https://ind-thomas.hyperverge.co/v1/PHLPayslipOCR";
     this.files = [];
     this.filenames = "";
+    this.filesizes = "";
 
     const buttonStyle = document.createElement("style");
     buttonStyle.textContent = `
@@ -2769,9 +2748,7 @@ class UnoForm3 extends HTMLElement {
       this.areFilesValid() ? "no" : "yes"
     );
 
-    setTimeout(() => {
-      this.updateChildComponents();
-    }, 10);
+    setTimeout(()=>{this.updateChildComponents()},10)
   }
 
   get code_1() {
@@ -3060,16 +3037,14 @@ class UnoForm3 extends HTMLElement {
 
     const files = fileElement.crossPlatformFiles;
     const fileNames = fileElement.fileNames;
+    const fileSizes = fileElement.fileSizes;
     this.fileCount = fileElement.fileCount;
-    // copied fileSizes from file-upload element.
-    this.file1Size = fileElement.file1Size;
-    this.file2Size = fileElement.file2Size;
-    this.file3Size = fileElement.file3Size;
     this.crossPlatformFiles = [];
 
-    this.value = "";
-    this.filenames = "";
-    this.files = [];
+    this.value = ""
+    this.filenames = ""
+    this.files = []
+    this.filesizes = ""
 
     for (let i = 0; i < this.fileCount; i++) {
       let name = fileNames[i].replaceAll(",", "");
@@ -3083,11 +3058,13 @@ class UnoForm3 extends HTMLElement {
         type: type,
       });
 
-      this.value += this.value ? "," : "";
-      this.filenames += this.filenames ? "," : "";
+      this.value += (this.value)? "," : "";
+      this.filenames += (this.filenames)? "," : "";
+      this.filesizes += (this.filesizes)? "," : "";
       this.value += fileBase64;
       this.files.push(fileBase64);
       this.filenames += name;
+      this.filesizes += fileSizes[i];
     }
     this.isProcessed = fileElement.isProcessed;
 
@@ -3204,15 +3181,13 @@ class UnoForm3 extends HTMLElement {
 
           let dropdownOptions = "";
           if (status == "Self-Employed / Business Owner") {
-            dropdownOptions =
-              "itr,Income Tax Return / BIR Form 1701,3,bank,Bank Statements,3,credit,Credit Card Statement,1,loan,Bank Loan Statement,1";
+            dropdownOptions = "itr,Income Tax Return / BIR Form 1701,3,bank,Bank Statements,3,credit,Credit Card Statement,1,loan,Bank Loan Statement,1";
             this.isValid = "https://ind-thomas.hyperverge.co/v1/PHLItrOcr";
           } else if (
             status == "Employed - Private" ||
             status == "Employed - Government"
           ) {
-            dropdownOptions =
-              "payslip,Pay Slip/s (1 month),3,coe,Certificate of Employment,1,bank,Bank Statements,3,credit,Credit Card Statement,1,loan,Bank Loan Statement,1";
+            dropdownOptions = "payslip,Pay Slip/s (1 month),3,coe,Certificate of Employment,1,bank,Bank Statements,3,credit,Credit Card Statement,1,loan,Bank Loan Statement,1";
           } else {
             dropdownOptions =
               "itr,Income Tax Return / BIR Form 1701,3,bank,Bank Statements,3,credit,Credit Card Statement,1,loan,Bank Loan Statement,1";
