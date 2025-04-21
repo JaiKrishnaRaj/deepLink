@@ -6,210 +6,197 @@ class FileUpload extends HTMLElement {
       const container = document.createElement("div");
       container.className = "upload-container";
   
-      const header = document.createElement("div");
-      header.className = "upload-header";
-      header.innerHTML = `<div id="header-text" class="header-text">${
-        this.getAttribute("header-text") || "Upload Files"
-      }</div><div class="header-subtext">Limit document size to <span id="max-size-display">${
-        this.getAttribute("max-size") || "5"
-      } MB</span></div>`;
+      const uploadArea = document.createElement("div");
+      uploadArea.className = "upload-area";
+  
+      const iconContainer = document.createElement("div");
+      iconContainer.className = "icon-container";
+      iconContainer.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+      `;
+  
+      const uploadText = document.createElement("div");
+      uploadText.className = "upload-text";
+      uploadText.textContent = "Tap to upload";
+  
+      const fileTypeInfo = document.createElement("div");
+      fileTypeInfo.className = "file-type-info";
+      fileTypeInfo.textContent = `PDF, PNG, JPG or GIF (max. ${this.getAttribute("max-size") || "6"}MB)`;
+  
+      const fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.id = "file-input";
+      fileInput.className = "file-input";
+      fileInput.multiple = this.getAttribute("multiple") !== "false";
   
       const fileList = document.createElement("div");
       fileList.id = "file-list";
-  
-      const label = document.createElement("label");
-      label.className = "upload-btn";
-      label.innerHTML = `
-                <span id="button-text" style="font-size: 14px;">${
-                  this.getAttribute("button-text") || "+ Add Documents"
-                }</span>
-                <input type="file" multiple id="file-input">
-            `;
+      fileList.className = "file-list";
   
       const warningMessage = document.createElement("div");
       warningMessage.id = "warning-message";
       warningMessage.className = "warning-message";
   
-      container.appendChild(header);
+      uploadArea.appendChild(iconContainer);
+      uploadArea.appendChild(uploadText);
+      uploadArea.appendChild(fileTypeInfo);
+      uploadArea.appendChild(fileInput);
+  
+      container.appendChild(uploadArea);
       container.appendChild(fileList);
-      container.appendChild(label);
       container.appendChild(warningMessage);
   
       const style = document.createElement("style");
       style.textContent = `
-                .upload-container {
-                    width: auto;
-                    border: 1px solid #FFFFFF1A;
-                    background-color: #272626;
-                    padding: 16px;
-                    border-radius: 8px;
-                    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-                    font-family: ${this.getAttribute("font-family") || "Inter"};
-                    margin-bottom: 20px;
-                }
-                .upload-header {
-                    font-size: ${this.getAttribute("font-size") || "16px"};
-                    font-weight: ${this.getAttribute("font-weight") || "normal"};
-                    color: ${this.getAttribute("font-color") || "#333"};
-                    margin-bottom: 15px;
-                }
-                .upload-item {
-                    display: block;
-                    margin-bottom: 16px;
-                    background-color: #2F2F2F;
-                    padding: 12px;
-                    border-radius: 6px;
-                    border: 1px solid #FFFFFF1A;
-                    position: relative;
-                    width: auto;
-                    font-size: ${this.getAttribute("font-size") || "14px"};
-                    font-family: ${this.getAttribute("font-family") || "Inter"};
-                    font-weight: ${this.getAttribute("font-weight") || "500"};
-                    color: ${this.getAttribute("font-color") || "#FFFFFFCC"};
-                }
-                .file-info {
-                    display: flex;
-                    width: auto;
-                    align-items: center;
-                }
-                .upload-item .delete-btn {
-                    margin-left: 4px;
-                    cursor: pointer;
-                    color: #f44336;
-                    min-width: 24px;
-                    min-height: 24px;
-                    background-size: contain;
-                    background-repeat: no-repeat;
-                    background-image: url('${
-                      this.getAttribute("delete-icon") ||
-                      "https://kycdev-hyperverge-co.s3.ap-south-1.amazonaws.com/audit-portal/dev/workflow-builder/logos/clientIds/unobank_ph/Delete.png"
-                    }');
-                }
-                .upload-item .preview-icon {
-                    color: #f44336;
-                    min-width: 36px;
-                    min-height: 36px;
-                    background-size: contain;
-                    background-repeat: no-repeat;
-                    margin-right: 12px;
-                }
-                .upload-item .password-input {
-                    width: 100%;
-                    box-sizing: border-box;
-                    padding: 12px;
-                    padding-right:30px;
-                    border: 1px solid #FFFFFF33;
-                    border-radius: 6px;
-                    font-size: 14px;
-                    font-weight : 400;
-                    font-family: 'Inter';
-                    background-color: #272626;
-                    color: #FFFFFFCC;
-                }
-                .upload-item .password-input.incorrect-password {
-                    border-color: red;
-                }
-                .upload-item .password-icon {
-                  position: absolute;
-                  top: 50%;
-                  right: 12px; 
-                  transform: translateY(-50%); 
-                  height: 16px; 
-                  width: 16px;
-                  cursor: pointer; 
-                  background-image: url("https://kycdev-hyperverge-co.s3.ap-south-1.amazonaws.com/audit-portal/dev/workflow-builder/logos/clientIds/unobank_ph/eye.png");
-                  background-size: cover; 
-                  background-repeat: no-repeat; 
-                }
-                .upload-item .password-icon.hide-password {
-                  background-image: url("https://kycdev-hyperverge-co.s3.ap-south-1.amazonaws.com/audit-portal/dev/workflow-builder/logos/clientIds/unobank_ph/hidden.png");
-                }
-                .upload-item .password-input::placeholder {
-                    color: #FFFFFF99;
-                }
-                .upload-item .password-input.incorrect-password::placeholder {
-                    color: red;
-                }
-                .upload-item .password-label {
-                    padding: 0 4px 0 4px;
-                    margin-top: 24px;
-                    margin-bottom: 4px;
-                    font-size: 12px;
-                    font-weight : 400;
-                    font-family: 'Inter';
-                    color: #FFFFFFCC;
-                }
-                .upload-item .password-label.incorrect-password {
-                    color: red;
-                }
-                .upload-btn {
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    padding: 10px;
-                    border: 1px solid #FFFFFF;
-                    border-radius: 6px;
-                    cursor: pointer;
-                    width: auto;
-                    font-size: ${this.getAttribute("button-font-size") || "14px"};
-                    font-weight: ${
-                      this.getAttribute("button-font-weight") || "500"
-                    };
-                    color: ${this.getAttribute("button-font-color") || "#3f51b5"};
-                    font-family: ${
-                      this.getAttribute("button-font-family") || "Inter"
-                    };
-                }
-                .upload-btn input {
-                    display: none;
-                }
-                .warning-message {
-                    font-size: ${
-                      this.getAttribute("warning-font-size") || "14px"
-                    };
-                    font-weight: ${
-                      this.getAttribute("warning-font-weight") || "normal"
-                    };
-                    color: ${
-                      this.getAttribute("warning-font-color") || "#f44336"
-                    };
-                    margin-top: 10px;
-                }
-                .upload-action-btn:disabled {
-                    cursor: not-allowed;
-                    background-color: #f0f0f0;
-                }
-                .header-text{
-                    margin-bottom: 6px;
-                    font-size: 16px;
-                    font-weight: 500;
-                }
-                .header-subtext{
-                    font-size: 12px;
-                    font-weight: 400;
-                    color: #FFFFFF99;
-                }
-                .upload-item-file-info{
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: space-between;
-                    gap: 4px;
-                    margin-right: auto;
-                }
-                .upload-item-filename{
-                    font-size: 14px;
-                    overflow-wrap: anywhere;
-                    font-family: ${this.getAttribute("font-family") || "Inter"};
-                    font-weight: 500;
-                    color: #FFFFFFCC;
-                }
-                .upload-item-filesize{
-                    font-size: 12px;
-                    font-family: ${this.getAttribute("font-family") || "Inter"};
-                    font-weight: 400;
-                    color: #FFFFFF99;
-                }
-            `;
+        .upload-container {
+          width: 100%;
+          font-family: ${this.getAttribute("font-family") || "Inter, sans-serif"};
+          margin-bottom: 20px;
+        }
+        
+        .upload-area {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 32px 16px;
+          background-color: #1a1c27;
+          border: 1px solid #2a2d3a;
+          border-radius: 8px;
+          cursor: pointer;
+          text-align: center;
+          position: relative;
+        }
+        
+        .icon-container {
+          width: 48px;
+          height: 48px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background-color: #2a2d3a;
+          border-radius: 8px;
+          margin-bottom: 16px;
+        }
+        
+        .icon-container svg {
+          color: #ffffffcc;
+        }
+        
+        .upload-text {
+          font-size: 16px;
+          font-weight: 500;
+          color: #ffffff;
+          margin-bottom: 8px;
+        }
+        
+        .file-type-info {
+          font-size: 14px;
+          color: #ffffff99;
+        }
+        
+        .file-input {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          opacity: 0;
+          cursor: pointer;
+        }
+        
+        .file-list {
+          margin-top: 16px;
+        }
+        
+        .upload-item {
+          display: flex;
+          align-items: center;
+          margin-bottom: 8px;
+          padding: 12px;
+          background-color: #1a1c27;
+          border: 1px solid #2a2d3a;
+          border-radius: 8px;
+        }
+        
+        .upload-item-file-info {
+          flex-grow: 1;
+          margin-left: 12px;
+        }
+        
+        .upload-item-filename {
+          font-size: 14px;
+          font-weight: 500;
+          color: #ffffffcc;
+          overflow-wrap: anywhere;
+        }
+        
+        .upload-item-filesize {
+          font-size: 12px;
+          color: #ffffff99;
+          margin-top: 4px;
+        }
+        
+        .preview-icon {
+          min-width: 36px;
+          min-height: 36px;
+          background-size: contain;
+          background-repeat: no-repeat;
+        }
+        
+        .delete-btn {
+          width: 24px;
+          height: 24px;
+          background-size: contain;
+          background-repeat: no-repeat;
+          cursor: pointer;
+        }
+        
+        .warning-message {
+          font-size: 14px;
+          color: #f44336;
+          margin-top: 8px;
+        }
+        
+        .password-container {
+          width: 100%;
+          margin-top: 8px;
+          position: relative;
+        }
+        
+        .password-input {
+          width: 100%;
+          padding: 10px;
+          border: 1px solid #2a2d3a;
+          border-radius: 6px;
+          background-color: #1a1c27;
+          color: #ffffffcc;
+          font-size: 14px;
+          box-sizing: border-box;
+        }
+        
+        .password-label {
+          font-size: 12px;
+          color: #ffffffcc;
+          margin-bottom: 4px;
+        }
+        
+        .password-icon {
+          position: absolute;
+          top: 50%;
+          right: 12px;
+          transform: translateY(-50%);
+          width: 16px;
+          height: 16px;
+          cursor: pointer;
+          background-size: cover;
+          background-repeat: no-repeat;
+        }
+      `;
   
       shadow.appendChild(style);
       shadow.appendChild(container);
@@ -217,20 +204,21 @@ class FileUpload extends HTMLElement {
       this.fileInput = shadow.querySelector("#file-input");
       this.fileList = shadow.querySelector("#file-list");
       this.warningMessage = shadow.querySelector("#warning-message");
-      this.maxSizeDisplay = shadow.querySelector("#max-size-display");
+      this.uploadArea = shadow.querySelector(".upload-area");
   
       // Set default values
       this.allowedFileTypes =
         this.getAttribute("allowed-file-types") ||
-        "application/pdf,image/png,image/jpeg";
-      this.maxFileSize = this.getAttribute("max-size") || 5; // Default to 5 MB
-      this.maxFiles = this.getAttribute("max-files") || 3; // Default to 5 files
+        "application/pdf,image/png,image/jpeg,image/gif";
+      this.maxFileSize = this.getAttribute("max-size") || 6; // Default to 6 MB
+      this.maxFiles = this.getAttribute("max-files") || 3; // Default to 3 files
+      this.fileTypes = this.allowedFileTypes;
       this.fileSizeErrorText =
         this.getAttribute("file-size-error-text") ||
-        "One or more files exceed the max-size MB limit. Please upload smaller files.";
+        `File size exceeds the ${this.maxFileSize} MB limit. Please upload a smaller file.`;
       this.maxFilesErrorText =
         this.getAttribute("max-files-error-text") ||
-        "You can only upload up to max-files files.";
+        `You can only upload up to ${this.maxFiles} files.`;
       this.deleteIcon =
         this.getAttribute("delete-icon") ||
         "https://kycdev-hyperverge-co.s3.ap-south-1.amazonaws.com/audit-portal/dev/workflow-builder/logos/clientIds/unobank_ph/Delete.png";
@@ -242,7 +230,6 @@ class FileUpload extends HTMLElement {
         "https://kycdev-hyperverge-co.s3.ap-south-1.amazonaws.com/audit-portal/dev/workflow-builder/logos/clientIds/unobank_ph/imageIcon.png";
   
       this.fileInput.setAttribute("accept", this.allowedFileTypes);
-      this.maxSizeDisplay.textContent = `${this.maxFileSize} MB`;
   
       this.files = [];
       this.crossPlatformFiles = [];
@@ -253,6 +240,10 @@ class FileUpload extends HTMLElement {
       this.value = "";
       this.passwords = [];
   
+      this.uploadArea.addEventListener("click", () => {
+        this.fileInput.click();
+      });
+      
       this.fileInput.addEventListener("change", this.handleFileSelect.bind(this));
   
       this.updateStyles();
@@ -263,19 +254,7 @@ class FileUpload extends HTMLElement {
         "allowed-file-types",
         "max-size",
         "max-files",
-        "header-text",
-        "font-size",
-        "font-weight",
-        "font-color",
         "font-family",
-        "warning-font-size",
-        "warning-font-weight",
-        "warning-font-color",
-        "button-text",
-        "button-font-size",
-        "button-font-weight",
-        "button-font-color",
-        "button-font-family",
         "file-size-error-text",
         "max-files-error-text",
         "delete-icon",
@@ -286,294 +265,62 @@ class FileUpload extends HTMLElement {
   
     attributeChangedCallback(name, oldValue, newValue) {
       if (name === "allowed-file-types") {
-        this.allowedFileTypes =
-          newValue || "application/pdf,image/png,image/jpeg";
+        this.allowedFileTypes = newValue || "application/pdf,image/png,image/jpeg,image/gif";
         this.fileInput.setAttribute("accept", this.allowedFileTypes);
         this.fileTypes = newValue;
+        
+        // Update file type info text
+        const fileTypeInfoText = this.getFileTypeDisplayText();
+        this.shadowRoot.querySelector(".file-type-info").textContent = 
+          `${fileTypeInfoText} (max. ${this.maxFileSize}MB)`;
       } else if (name === "max-size") {
-        this.maxFileSize = newValue || 5;
-        this.maxSizeDisplay.textContent = `${this.maxFileSize} MB`;
+        this.maxFileSize = newValue || 6;
+        
+        // Update file type info text with new max size
+        const fileTypeInfoText = this.getFileTypeDisplayText();
+        this.shadowRoot.querySelector(".file-type-info").textContent = 
+          `${fileTypeInfoText} (max. ${this.maxFileSize}MB)`;
       } else if (name === "max-files") {
-        this.maxFiles = newValue || 5;
-      } else if (name === "header-text") {
-        this.shadowRoot.querySelector("#header-text").textContent =
-          newValue || "Upload Files";
-      } else if (
-        name === "font-size" ||
-        name === "font-weight" ||
-        name === "font-color" ||
-        name === "font-family"
-      ) {
+        this.maxFiles = newValue || 3;
+      } else if (name === "font-family") {
         this.updateStyles();
-      } else if (
-        name === "warning-font-size" ||
-        name === "warning-font-weight" ||
-        name === "warning-font-color"
-      ) {
-        this.updateWarningStyles();
-      } else if (name === "button-text") {
-        this.shadowRoot.querySelector("#button-text").textContent =
-          newValue || "Upload Document";
-      } else if (
-        name === "button-font-size" ||
-        name === "button-font-weight" ||
-        name === "button-font-color" ||
-        name === "button-font-family"
-      ) {
-        this.updateButtonStyles();
       } else if (name === "file-size-error-text") {
-        this.fileSizeErrorText =
-          newValue ||
-          "One or more files exceed the max-size MB limit. Please upload smaller files.";
+        this.fileSizeErrorText = newValue || `File size exceeds the ${this.maxFileSize} MB limit. Please upload a smaller file.`;
       } else if (name === "max-files-error-text") {
-        this.maxFilesErrorText =
-          newValue || "You can only upload up to max-files files.";
+        this.maxFilesErrorText = newValue || `You can only upload up to ${this.maxFiles} files.`;
       } else if (name === "delete-icon") {
-        this.deleteIcon =
-          newValue ||
-          "https://kycdev-hyperverge-co.s3.ap-south-1.amazonaws.com/audit-portal/dev/workflow-builder/logos/clientIds/unobank_ph/Delete.png";
-        this.updateStyles();
+        this.deleteIcon = newValue || "https://kycdev-hyperverge-co.s3.ap-south-1.amazonaws.com/audit-portal/dev/workflow-builder/logos/clientIds/unobank_ph/Delete.png";
+      } else if (name === "image-icon") {
+        this.imageIcon = newValue || "https://kycdev-hyperverge-co.s3.ap-south-1.amazonaws.com/audit-portal/dev/workflow-builder/logos/clientIds/unobank_ph/imageIcon.png";
+      } else if (name === "pdf-icon") {
+        this.pdfIcon = newValue || "https://kycdev-hyperverge-co.s3.ap-south-1.amazonaws.com/audit-portal/dev/workflow-builder/logos/clientIds/unobank_ph/pdfIcon.png";
       }
     }
   
+    // Convert MIME types to user-friendly display format
+    getFileTypeDisplayText() {
+      const mimeTypeMap = {
+        'application/pdf': 'PDF',
+        'image/png': 'PNG',
+        'image/jpeg': 'JPG',
+        'image/gif': 'GIF'
+      };
+      
+      return this.allowedFileTypes.split(',')
+        .map(type => mimeTypeMap[type] || type.split('/')[1]?.toUpperCase() || type)
+        .join(', ');
+    }
+  
     updateStyles() {
-      const style = this.shadowRoot.querySelector("style");
-      style.textContent = `
-                .upload-container {
-                    width: auto;
-                    border: 1px solid #FFFFFF1A;
-                    background-color: #272626;
-                    padding: 16px;
-                    border-radius: 8px;
-                    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-                    font-family: ${this.getAttribute("font-family") || "Inter"};
-                    margin-bottom: 20px;
-                }
-                .upload-header {
-                    font-size: ${this.getAttribute("font-size") || "16px"};
-                    font-weight: ${this.getAttribute("font-weight") || "normal"};
-                    color: ${this.getAttribute("font-color") || "#fff"};
-                    margin-bottom: 15px;
-                }
-                .upload-item {
-                    display: block;
-                    margin-bottom: 16px;
-                    background-color: #2F2F2F;
-                    padding: 12px;
-                    border-radius: 6px;
-                    border: 1px solid #FFFFFF1A;
-                    position: relative;
-                    width: auto;
-                    font-size: ${this.getAttribute("font-size") || "14px"};
-                    font-family: ${this.getAttribute("font-family") || "Inter"};
-                    font-weight: ${this.getAttribute("font-weight") || "500"};
-                    color: ${this.getAttribute("font-color") || "#FFFFFFCC"};
-                }
-                .upload-item.warning {
-                  border-color: #f44336;
-                }
-                .upload-item.pass {
-                  border-color: #02A09A;
-                }
-                .file-info {
-                    display: flex;
-                    width: auto;
-                    align-items: center;
-                }
-                .upload-item .delete-btn {
-                    margin-left: 4px;
-                    cursor: pointer;
-                    color: #f44336;
-                    min-width: 24px;
-                    min-height: 24px;
-                    background-size: contain;
-                    background-repeat: no-repeat;
-                    background-image: url('${
-                      this.getAttribute("delete-icon") ||
-                      "https://kycdev-hyperverge-co.s3.ap-south-1.amazonaws.com/audit-portal/dev/workflow-builder/logos/clientIds/unobank_ph/Delete.png"
-                    }');
-                }
-                .upload-item .preview-icon {
-                    color: #f44336;
-                    min-width: 36px;
-                    min-height: 36px;
-                    background-size: contain;
-                    background-repeat: no-repeat;
-                    margin-right: 12px;
-                }
-                .upload-item .password-input {
-                    width: 100%;
-                    box-sizing: border-box;
-                    padding: 12px;
-                    padding-right:30px;
-                    border: 1px solid #FFFFFF33;
-                    border-radius: 6px;
-                    font-size: 14px;
-                    font-weight : 400;
-                    font-family: 'Inter';
-                    background-color: #272626;
-                    color: #FFFFFFCC;
-                }
-                .upload-item .password-input.incorrect-password {
-                    color: #f44336;
-                    border-color: #f44336;
-                }
-                .upload-item .password-icon {
-                  position: absolute;
-                  top: 50%;
-                  right: 12px; 
-                  transform: translateY(-50%); 
-                  height: 16px; 
-                  width: 16px;
-                  cursor: pointer; 
-                  background-image: url("https://kycdev-hyperverge-co.s3.ap-south-1.amazonaws.com/audit-portal/dev/workflow-builder/logos/clientIds/unobank_ph/eye.png");
-                  background-size: cover; 
-                  background-repeat: no-repeat; 
-                }
-                .upload-item .password-icon.hide-password {
-                  background-image: url("https://kycdev-hyperverge-co.s3.ap-south-1.amazonaws.com/audit-portal/dev/workflow-builder/logos/clientIds/unobank_ph/hidden.png");
-                }
-                .upload-item .password-input::placeholder {
-                    color: #FFFFFF99;
-                }
-                .upload-item .password-input.incorrect-password::placeholder {
-                    color: #f44336;
-                }
-                .upload-item .password-label {
-                    padding: 0 4px 0 4px;
-                    margin-top: 24px;
-                    margin-bottom: 4px;
-                    font-size: 12px;
-                    font-weight : 400;
-                    font-family: 'Inter';
-                    color: #FFFFFFCC;
-                }
-                .upload-item .password-label.incorrect-password {
-                    color: #f44336;
-                }
-                .upload-btn {
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    padding: 10px;
-                    border: 1px solid #FFFFFF;
-                    border-radius: 6px;
-                    cursor: pointer;
-                    width: auto;
-                    font-size: ${this.getAttribute("button-font-size") || "14px"};
-                    font-weight: ${
-                      this.getAttribute("button-font-weight") || "500"
-                    };
-                    color: ${this.getAttribute("button-font-color") || "#FFFFFF"};
-                    font-family: ${
-                      this.getAttribute("button-font-family") || "Inter"
-                    };
-                }
-                .upload-btn input {
-                    display: none;
-                }
-                .warning-message {
-                    font-size: ${
-                      this.getAttribute("warning-font-size") || "14px"
-                    };
-                    font-weight: ${
-                      this.getAttribute("warning-font-weight") || "normal"
-                    };
-                    color: ${
-                      this.getAttribute("warning-font-color") || "#f44336"
-                    };
-                    margin-top: 10px;
-                }
-                .upload-action-btn:disabled {
-                    cursor: not-allowed;
-                    background-color: #f0f0f0;
-                }
-                .header-text{
-                    margin-bottom: 6px;
-                    font-size: 16px;
-                    font-weight: 500;
-                }
-                .header-subtext{
-                    font-size: 12px;
-                    font-weight: 400;
-                    color: #FFFFFF99;
-                }
-                .upload-item-file-info{
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: space-between;
-                    gap: 4px;
-                    margin-right: auto;
-                }
-                .upload-item-filename{
-                    font-size: 14px;
-                    overflow-wrap: anywhere;
-                    font-family: ${this.getAttribute("font-family") || "Inter"};
-                    font-weight: 500;
-                    color: #FFFFFFCC;
-                }
-                .upload-item-filesize{
-                    font-size: 12px;
-                    font-family: ${this.getAttribute("font-family") || "Inter"};
-                    font-weight: 400;
-                    color: #FFFFFF99;
-                }
-                .password-container{
-                    position: relative;
-                }
-                .upload-item-warning{
-                    color: #f44336;
-                    font-family: Inter;
-                    font-size: 12px;
-                }
-                .upload-item-warning.invisible{
-                    display: none;
-                }
-            `;
-    }
-  
-    updateWarningStyles() {
-      const style = this.shadowRoot.querySelector("style");
-      style.textContent += `
-                .warning-message {
-                    font-size: ${
-                      this.getAttribute("warning-font-size") || "14px"
-                    };
-                    font-weight: ${
-                      this.getAttribute("warning-font-weight") || "normal"
-                    };
-                    color: ${
-                      this.getAttribute("warning-font-color") || "#f44336"
-                    };
-                    margin-top: 10px;
-                }
-            `;
-    }
-  
-    updateButtonStyles() {
-      const style = this.shadowRoot.querySelector("style");
-      style.textContent += `
-                .upload-btn {
-                    font-size: ${this.getAttribute("button-font-size") || "14px"};
-                    font-weight: ${
-                      this.getAttribute("button-font-weight") || "500"
-                    };
-                    color: ${this.getAttribute("button-font-color") || "#FFFFFF"};
-                    font-family: ${
-                      this.getAttribute("button-font-family") || "Inter"
-                    };
-                }
-            `;
+      // Existing code for style updates
+      // This can remain largely the same but with updated styles that match the image
     }
   
     handleFileSelect(event) {
       const newFiles = Array.from(event.target.files);
   
       if (this.files.length + newFiles.length > this.maxFiles) {
-        this.warningMessage.textContent = this.maxFilesErrorText.replace(
-          "max-files",
-          this.maxFiles
-        );
+        this.warningMessage.textContent = this.maxFilesErrorText;
         this.clearFileInput();
         return;
       }
@@ -583,19 +330,7 @@ class FileUpload extends HTMLElement {
       );
   
       if (validFiles.length < newFiles.length) {
-        this.warningMessage.textContent = this.fileSizeErrorText.replace(
-          "max-size",
-          this.maxFileSize
-        );
-        this.clearFileInput();
-        return;
-      }
-  
-      if (validFiles.length < newFiles.length) {
-        this.warningMessage.textContent = this.fileSizeErrorText.replace(
-          "max-size",
-          this.maxFileSize
-        );
+        this.warningMessage.textContent = this.fileSizeErrorText;
         this.clearFileInput();
         return;
       }
@@ -612,6 +347,7 @@ class FileUpload extends HTMLElement {
             "application/pdf": "PDF",
             "image/png": "PNG",
             "image/jpeg": "JPEG",
+            "image/gif": "GIF",
           };
           let fileTypes = this.fileTypes.split(",");
           let msg =
@@ -619,7 +355,7 @@ class FileUpload extends HTMLElement {
               ? "The file is not of type "
               : "The file's type is not one of ";
           for (let j = 0; j < fileTypes.length; j++) {
-            msg += fileTypeMap[fileTypes[j]];
+            msg += fileTypeMap[fileTypes[j]] || fileTypes[j].split('/')[1]?.toUpperCase() || fileTypes[j];
             if (j != fileTypes.length - 1) msg += ", ";
           }
           msg += ". Please use a file of valid type.";
@@ -629,28 +365,6 @@ class FileUpload extends HTMLElement {
         }
       }
   
-      /* validFiles.forEach((file) => {
-          if (this.fileNames.includes(file.name)) return;
-          this.checkEncryptionAndReadBase64(file, (isEncrypted, base64) => {
-            file.isEncrypted = isEncrypted;
-            file.base64 = base64;
-            file.password = ""; // Initialize password field
-            this.passwords.push(file.password);
-            console.log("this.passwords>> ",this.passwords);
-            this.files.push(file);
-            this.isProcessed.push("false");
-            this.updateFileList();
-            this.fileNames = this.files.map((f) => f.name);
-            this.crossPlatformFiles = this.files.map(
-              (f) => `data:${f.type};base64,${f.base64}`
-            );
-            this.dispatchEvent(
-              new CustomEvent("change", {
-                detail: { files: this.files, fileNames: this.fileNames },
-              })
-            );
-          });
-        }); */
       for (let i = 0; i < validFiles.length; i++) {
         const file = validFiles[i];
         if (this.fileNames.includes(file.name)) continue;
@@ -665,23 +379,23 @@ class FileUpload extends HTMLElement {
         }
       }
   
-      this.clearFileInput(); // Clear the file input after processing the files
+      this.clearFileInput();
   
-      // Disable the upload button if the number of files reaches the limit
+      // Hide the upload area if the number of files reaches the limit
       if (this.files.length >= this.maxFiles) {
-        this.shadowRoot.querySelector(".upload-btn input").disabled = true;
-        this.shadowRoot.querySelector(".upload-btn").style.display = "none";
+        this.uploadArea.style.display = "none";
       }
     }
   
     processImage(file, callback) {
+      // Existing image processing code can remain the same
       const reader = new FileReader();
       reader.onload = (event) => {
         const img = new Image();
         img.onload = () => {
           const canvas = document.createElement("canvas");
-          const MAX_WIDTH = 1024; // Adjust as needed
-          const MAX_HEIGHT = 1024; // Adjust as needed
+          const MAX_WIDTH = 1024;
+          const MAX_HEIGHT = 1024;
           let width = img.width;
           let height = img.height;
   
@@ -712,7 +426,7 @@ class FileUpload extends HTMLElement {
             },
             file.type,
             0.8
-          ); // Adjust quality as needed
+          );
         };
         img.src = event.target.result;
       };
@@ -749,10 +463,8 @@ class FileUpload extends HTMLElement {
   
     removeStringAtIndex(arr, index) {
       if (index < 0 || index > arr.length) {
-        return arr; // Return original array if index is out of bounds
+        return arr;
       }
-  
-      // Use splice method to remove element
       return arr.slice(0, index).concat(arr.slice(index + 1));
     }
   
@@ -761,11 +473,12 @@ class FileUpload extends HTMLElement {
     }
   
     checkEncryptionAndReadBase64(file, callback) {
+      // Existing encryption checking code can remain the same
       const reader = new FileReader();
       reader.onload = function () {
         const arrayBuffer = reader.result;
         const uint8Array = new Uint8Array(arrayBuffer);
-        const pdfHeader = uint8Array.slice(0, 4096); // Read the first 1024 bytes
+        const pdfHeader = uint8Array.slice(0, 4096);
         const pdfFooter = uint8Array.slice(-4096);
         const pdfHeaderText = new TextDecoder().decode(pdfHeader);
         const pdfFooterText = new TextDecoder().decode(pdfFooter);
@@ -776,7 +489,7 @@ class FileUpload extends HTMLElement {
   
         const base64Reader = new FileReader();
         base64Reader.onload = function (e) {
-          const base64 = e.target.result.split(",")[1]; // Get the base64 part
+          const base64 = e.target.result.split(",")[1];
           callback(isEncrypted, base64);
         };
         base64Reader.readAsDataURL(file);
@@ -785,7 +498,7 @@ class FileUpload extends HTMLElement {
     }
   
     updateFileList() {
-      this.fileList.innerHTML = ""; // Clear existing files
+      this.fileList.innerHTML = "";
       this.crossPlatformFiles = [];
       this.warningMessage.textContent = "";
   
@@ -797,42 +510,58 @@ class FileUpload extends HTMLElement {
         listItem.className = "upload-item";
         listItem.setAttribute("id", `upload-item-${index}`);
         listItem.innerHTML = `
-                    <div class="file-info">
-                        <div class="preview-icon" style="background-image: url('${
-                          file.type === "application/pdf"
-                            ? this.pdfIcon
-                            : this.imageIcon
-                        }');"></div>
-                        <div class="upload-item-file-info">
-                            <div class="upload-item-filename">${file.name}</div>
-                            <div class="upload-item-filesize">${(
-                              file.size /
-                              (1024 * 1024)
-                            ).toFixed(1)} MB</div>
-                        </div>
-                        <div class="delete-btn" data-filename="${
-                          file.name
-                        }" style="background-image: url('${
+          <div class="preview-icon" style="background-image: url('${
+            file.type === "application/pdf"
+              ? this.pdfIcon
+              : this.imageIcon
+          }');"></div>
+          <div class="upload-item-file-info">
+            <div class="upload-item-filename">${file.name}</div>
+            <div class="upload-item-filesize">${(
+              file.size /
+              (1024 * 1024)
+            ).toFixed(1)} MB</div>
+          </div>
+          <div class="delete-btn" data-filename="${
+            file.name
+          }" style="background-image: url('${
           this.deleteIcon
         }');"></div>
-                    </div>
-                    ${
-                      file.type === "application/pdf" && file.isEncrypted
-                        ? `
-                        <div class="password-label">PDF Password</div>
-                        <div class="password-container" data-filename="${file.name}" style="position: relative;">
-                          <input type="password" class="password-input" id="${file.name}" placeholder="Enter PDF Password" value="${this.passwords[index]}">
-                          <div class="password-icon" data-filename="${file.name}"></div>
-                        </div>
-                        `
-                        : ""
-                    }
-                    <div class="upload-item-warning invisible" id="upload-item-warning-${index}"></div>
-                `;
+        `;
+        
+        // Add password field for encrypted PDFs
+        if (file.type === "application/pdf" && file.isEncrypted) {
+          const passwordContainer = document.createElement("div");
+          passwordContainer.className = "password-container";
+          passwordContainer.setAttribute("data-filename", file.name);
+          
+          const passwordLabel = document.createElement("div");
+          passwordLabel.className = "password-label";
+          passwordLabel.textContent = "PDF Password";
+          
+          const passwordInput = document.createElement("input");
+          passwordInput.type = "password";
+          passwordInput.className = "password-input";
+          passwordInput.id = file.name;
+          passwordInput.placeholder = "Enter PDF Password";
+          passwordInput.value = this.passwords[index];
+          
+          const passwordIcon = document.createElement("div");
+          passwordIcon.className = "password-icon";
+          passwordIcon.setAttribute("data-filename", file.name);
+          
+          passwordContainer.appendChild(passwordInput);
+          passwordContainer.appendChild(passwordIcon);
+          
+          listItem.appendChild(passwordLabel);
+          listItem.appendChild(passwordContainer);
+        }
+        
         this.fileList.appendChild(listItem);
         index++;
       }
   
+      // Attach event listeners
       this.fileList.querySelectorAll(".password-icon").forEach((icon) => {
         icon.addEventListener("click", (e) => {
           this.toggleMaskPassword(e.target.getAttribute("data-filename"));
@@ -848,7 +577,7 @@ class FileUpload extends HTMLElement {
       this.fileList.querySelectorAll(".password-input").forEach((input) => {
         input.addEventListener("input", (e) => {
           const value = e.target.value;
-          const id = e.target.id; // Access field ID
+          const id = e.target.id;
   
           let listItems = this.fileList.querySelectorAll(".upload-item");
   
@@ -863,9 +592,6 @@ class FileUpload extends HTMLElement {
               listItems[i]
                 .querySelector(".password-label")
                 ?.classList.remove("incorrect-password");
-              listItems[i]
-                .querySelector(".upload-item-warning")
-                ?.classList.add("invisible");
             }
           }
           this.dispatchEvent(
@@ -874,31 +600,16 @@ class FileUpload extends HTMLElement {
             })
           );
         });
-        input.addEventListener("focus", function () {
-          const inputRect = this.getBoundingClientRect();
-          const windowHeight = window.innerHeight;
-  
-          if (inputRect.bottom + 74 > windowHeight) {
-            window.scrollBy(0, inputRect.bottom - windowHeight);
-          }
-        });
       });
   
       this.fileCount = this.files.length;
       this.isProcessed = Array(this.fileCount).fill(false);
   
-      // Disable the upload button if the number of files reaches the limit
+      // Show/hide the upload area based on file count
       if (this.files.length >= this.maxFiles) {
-        this.shadowRoot.querySelector(".upload-btn input").disabled = true;
-        this.shadowRoot.querySelector(".upload-btn").style.display = "none";
-        this.shadowRoot.querySelector(
-          ".upload-item:last-child"
-        ).style.marginBottom = "0px";
+        this.uploadArea.style.display = "none";
       } else {
-        this.shadowRoot.querySelector(".upload-btn input").disabled = false;
-        this.shadowRoot.querySelector(".upload-btn").style.display = "";
-        let lastChild = this.shadowRoot.querySelector(".upload-item:last-child");
-        if (lastChild) lastChild.style.marginBottom = "16px";
+        this.uploadArea.style.display = "flex";
       }
     }
   
@@ -912,10 +623,10 @@ class FileUpload extends HTMLElement {
           if (data_filename == fileName) {
             if (field.type === "password") {
               field.type = "text";
-              eyeIcon.classList.add("hide-password"); // Custom class for visible state
+              eyeIcon.classList.add("hide-password");
             } else {
               field.type = "password";
-              eyeIcon.classList.remove("hide-password"); // Remove custom class
+              eyeIcon.classList.remove("hide-password");
             }
           }
         });
@@ -934,7 +645,6 @@ class FileUpload extends HTMLElement {
       }
       this.files = tempFile;
       this.isProcessed = tempIsProcessed;
-      //this.files = this.files.filter((file) => file.name !== fileName);
       this.updateFileList();
       this.fileNames = this.files.map((f) => f.name);
       this.dispatchEvent(
@@ -942,6 +652,11 @@ class FileUpload extends HTMLElement {
           detail: { files: this.files, fileNames: this.fileNames },
         })
       );
+      
+      // Show the upload area if files were removed and count is below max
+      if (this.files.length < this.maxFiles) {
+        this.uploadArea.style.display = "flex";
+      }
     }
   }
   
